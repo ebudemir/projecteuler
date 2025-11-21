@@ -69,7 +69,7 @@ def P_A_intersect_B_closed_decimal(n, k):
 
 def go(k):
     print("*****************************************************")
-    print("*********", k, "*********")
+    print("***********************", k, "***********************")
     print("*****************************************************")
     getcontext().prec = 1000000
     # Increase precision and max exponent
