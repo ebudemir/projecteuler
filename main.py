@@ -62,11 +62,10 @@ def solve_y(a, b, c, d):
     z_points = []
     for z in zz:
         mn = xx - z
-        indexes_x = np.where(((mn[:-1] <= 0) & (mn[1:] > 0)) | ((mn[:-1] >= 0) & (mn[1:] < 0)))[0]
+        indexes_x = np.where(((mn[:-1] <= 0) & (mn[1:] > 0)) | ((mn[:-1] >= 0) & (mn[1:] < 0)) | ((mn[:-1] == 0) & (mn[1:] == 0)))[0]
         mn = yy - z
-        indexes_y = np.where(((mn[:-1] <= 0) & (mn[1:] > 0)) | ((mn[:-1] >= 0) & (mn[1:] < 0)))[0]
+        indexes_y = np.where(((mn[:-1] <= 0) & (mn[1:] > 0)) | ((mn[:-1] >= 0) & (mn[1:] < 0)) | ((mn[:-1] == 0) & (mn[1:] == 0)))[0]
         print(indexes_x, indexes_y, z)
-
         for x in indexes_x:
             for y in indexes_y:
                 x_points.append(zz[x])
@@ -74,7 +73,7 @@ def solve_y(a, b, c, d):
                 z_points.append(z)
 
     plt.figure()
-    plt.scatter(x_points, y_points, s=1, c=z_points, cmap='viridis')
+    plt.scatter(x_points, y_points, s=0.2, c=z_points, cmap='viridis')
     plt.xlabel("x")
     plt.ylabel(r"$H_{a,b}(x)$")
     plt.title(f"H_{{{a},{b}}}(x)")
