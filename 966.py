@@ -1,7 +1,12 @@
-from tqdm import tqdm
+import argparse
+import math
+import os
+
 import numpy as np
 import mpmath as mp
 from decimal import Decimal, getcontext, ROUND_HALF_UP
+
+DIR = "C:/Users/ebude/PycharmProjects/projecteuler/966/"
 
 mp.mp.dps = 100  # hassasiyet
 ctx = getcontext()
@@ -41,22 +46,19 @@ def triangular_area(side, radius):
     other_side = (radius * radius - side * side).sqrt()
     return other_side * side
 
-
-if __name__ == "__main__":
-    aa, bb, cc = 3, 4, 6
+def calculate_max(aa, bb, cc, A_hc_range, I_hc_range):
     a = Decimal.from_float(aa)
     b = Decimal.from_float(bb)
     c = Decimal.from_float(cc)
     t_area = Area(a, b, c)
     r = get_radius(t_area)
-    #print(r)
     A, B, C = triangle_angles(a, b, c)
-    #print(mp.degrees(A), mp.degrees(B), mp.degrees(C))
     max_area = 0
-    #for A_Hc in tqdm(np.arange(r - Decimal("0.3"), a + Decimal("2"), Decimal("0.005"))):
-    for A_Hc in tqdm(np.arange(Decimal("3.3450"), Decimal("3.3550"), Decimal("0.00001"))):
-        #for I_Hc in np.arange(Decimal("0.05"), r + Decimal("0.9"), Decimal("0.005")):
-        for I_Hc in np.arange(Decimal("0.5110"), Decimal("0.5140"), Decimal("0.00001")):
+    max_A_Hc = 0
+    max_I_Hc = 0
+    #for A_Hc in tqdm(A_hc_range):
+    for A_Hc in A_hc_range:
+        for I_Hc in I_hc_range:
             a_I_A_Hc = mp.atan(I_Hc / A_Hc)
             A_I = (A_Hc * A_Hc + I_Hc * I_Hc).sqrt()
             a_I_A_Hb = A - a_I_A_Hc
@@ -89,14 +91,16 @@ if __name__ == "__main__":
                     angle = angle1 + angle2 + angle3 + angle4 + angle5 + angle6
                     area = angle * r * r / 2
                     total_area = area + area1 + area2 + area3
-                    tri_area = area1 + area2 + area3
-                    #print(area)
-                    #print("MAX AREA", max_area)
+                    # tri_area = area1 + area2 + area3
+                    # print(area)
+                    # print("MAX AREA", max_area)
                     if total_area > max_area:
                         max_area = total_area
-                        print("MAX AREA", max_area)
-                        print("A_Hc", A_Hc)
-                        print("I_Hc", I_Hc)
+                        max_I_Hc = I_Hc
+                        max_A_Hc = A_Hc
+                        # print("MAX AREA", max_area)
+                        # print("A_Hc", A_Hc)
+                        # print("I_Hc", I_Hc)
                         # print(I_C, I_C1, I_C2)
                         # print(mp.degrees(a_I_A_Hc), mp.degrees(a_I_A_Hb))
                         # print(mp.degrees(a_I_B_Hc), mp.degrees(a_I_B_Ha))
@@ -107,3 +111,83 @@ if __name__ == "__main__":
                         # print(A_Hc, B_Hc)
                         # print(angle)
                         # print(tri_area)
+    #print(max_area, max_I_Hc, max_A_Hc)
+    return max_area, max_I_Hc, max_A_Hc
+
+def calculate_max_final(aa, bb, cc):
+    a = Decimal.from_float(aa)
+    b = Decimal.from_float(bb)
+    c = Decimal.from_float(cc)
+    t_area = Area(a, b, c)
+    r = get_radius(t_area)
+    A_Hc_range = np.arange(Decimal("0.001").max(r - Decimal("0.5")), c + Decimal("2"), Decimal("0.1"))
+    I_Hc_range = np.arange(Decimal("0.001"), r + Decimal("1"), Decimal("0.1"))
+    max_area, max_I_Hc, max_A_Hc = calculate_max(aa, bb, cc, A_Hc_range, I_Hc_range)
+    step = Decimal("0.01")
+    while True:
+        A_Hc_range = np.arange(Decimal("0.001").max(max_A_Hc - 5 * step), max_A_Hc + 5 * step, step)
+        I_Hc_range = np.arange(Decimal("0.001").max(max_I_Hc - 5 * step), max_I_Hc + 5 * step, step)
+        max_area_new, max_I_Hc, max_A_Hc = calculate_max(aa, bb, cc, A_Hc_range, I_Hc_range)
+        max_area_rounded = round(max_area, 7)
+        max_area_new_rounded = round(max_area_new, 7)
+        if max_area_rounded == max_area_new_rounded:
+            break
+        step = step / 3
+        max_area = max_area_new
+    #print(aa, bb, cc, max_area_rounded)
+    return  max_area_rounded
+
+def write_results():
+    parser = argparse.ArgumentParser(description="A simple script using argparse.")
+    parser.add_argument("--remainder", required=True, help="The name of the user to greet.")
+    parser.add_argument("--denominator", required=True, help="The name of the user to greet.")
+    args = parser.parse_args()
+    rm = int(args.remainder)
+    dn = int(args.denominator)
+    total = 0
+    for a in range(1,199):
+        for b in range(a, 199):
+            for c in range(b, 199):
+                if (c < a + b) and (a + b + c <= 200) and (c % dn == rm):
+                    gcd = math.gcd(a, math.gcd(b,c))
+                    if gcd == 1:
+                        max = calculate_max_final(a, b, c)
+                        total += max
+                        file = DIR + str(a) + "_" + str(b) + "_" + str(c) + ".txt"
+                        with open(file, "w") as f:
+                            f.write(str(max))
+                        print(a, b, c, max, total)
+
+if __name__ == "__main__":
+    total = 0.0
+    for a in range(1,199):
+        for b in range(a, 199):
+            for c in range(b, 199):
+                if (c < a + b) and (a + b + c <= 200):
+                    gcd = math.gcd(a, math.gcd(b,c))
+                    if gcd == 1:
+                        file = DIR + str(a) + "_" + str(b) + "_" + str(c) + ".txt"
+                        if os.path.isfile(file):
+                            with open(file, "r") as f:
+                                val = float(f.read())
+                                total += val
+                            print(a, b, c, val, total)
+                        else:
+                            print("file does not exist", file, gcd)
+                            quit()
+                    else:
+                        aa = int(a / gcd)
+                        bb = int(b / gcd)
+                        cc = int(c / gcd)
+                        file = DIR + str(aa) + "_" + str(bb) + "_" + str(cc) + ".txt"
+                        if os.path.isfile(file):
+                            with open(file, "r") as f:
+                                val = float(f.read())
+                                total += (val * gcd * gcd)
+                            print(a, b, c, val, total)
+                        else:
+                            print("file does not exist", file, gcd)
+                            quit()
+    print("total area = ", total)
+
+
